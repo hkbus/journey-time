@@ -57,6 +57,7 @@ jobs:
           filesaver.js \
           district_boundaries.geojson \
           pdd.geojson \
+          CNAME \
           build/
       - name: Update resources
         uses: JamesIves/github-pages-deploy-action@v4
