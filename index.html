@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK Travel Time Heatmap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="custom_leaflet_bigimage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+    <script src="custom_heatmap_leaflet.js"></script>
+    <script src="kdtree.js"></script>
+    <script src="filesaver.js"></script>
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <div class="hero is-fullheight">
+        <div class="box sidebar">
+            <div class="field">
+                <label class="label" for="language">地圖語言<br>Map Language</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="language" id="language" onchange="reload();">
+                            <option value="zh">中文</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="basemapUrl">背景地圖連結<br>Basemap URLs</label>
+                <div class="control">
+                    <textarea class="textarea" id="basemapUrl" name="basemapUrl" placeholder="重置 Reset" onchange="reload();" wrap="off" rows="3"></textarea>
+                </div>
+                <p class="note">Each line is one layer<br>Placeholders: {x} {y} {z} {lang}: en/tc</p>
+            </div>
+
+            <div class="field">
+                <label class="label">運輸方式過濾<br>Transportation Modes Filter</label>
+                <div class="control">
+                    <table class="modes-table prevent-select">
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="kmb" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('kmb');">九巴</td>
+                            <td onclick="flipCheckbox('kmb');">KMB</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="ctb" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('ctb');">城巴</td>
+                            <td onclick="flipCheckbox('ctb');">Citybus</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="nlb" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('nlb');">嶼巴</td>
+                            <td onclick="flipCheckbox('nlb');">NLB</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="gmb" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('gmb');">專線小巴</td>
+                            <td onclick="flipCheckbox('gmb');">GMB</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="mtr" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('mtr');">港鐵</td>
+                            <td onclick="flipCheckbox('mtr');">MTR</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="lightRail" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('lightRail');">輕鐵</td>
+                            <td onclick="flipCheckbox('lightRail');">Light Rail</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="lrtfeeder" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('lrtfeeder');">港鐵巴士</td>
+                            <td onclick="flipCheckbox('lrtfeeder');">MTR Bus</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="hkkf" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('hkkf');">港九小輪</td>
+                            <td onclick="flipCheckbox('hkkf');">HKKF</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="sunferry" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('sunferry');">新渡輪</td>
+                            <td onclick="flipCheckbox('sunferry');">Sun Ferry</td>
+                        </tr>
+                        <tr>
+                            <td><label class="checkbox"><input type="checkbox" name="modes" value="fortuneferry" checked onchange="reload();"></label></td>
+                            <td onclick="flipCheckbox('fortuneferry');">富裕小輪</td>
+                            <td onclick="flipCheckbox('fortuneferry');">Fortune Ferry</td>
+                        </tr>
+                    </table>
+                    <button class="modes-toggle-button button is-small" onclick="toggleAllCheckboxes();">全選 Toggle All</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="direction">方向<br>Direction</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="direction" id="direction" onchange="reload();">
+                            <option value="departing-from">選擇地點出發 Departing From</option>
+                            <option value="arriving-at">到達選擇地點 Arriving At</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="weekday">星期及小時<br>Weekday & Hour</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="weekday" id="weekday" onchange="reload();">
+                            <option value="N">全日平均 Any Time Average</option>
+                            <option value="1">星期一 Monday</option>
+                            <option value="2">星期二 Tuesday</option>
+                            <option value="3">星期三 Wednesday</option>
+                            <option value="4">星期四 Thursday</option>
+                            <option value="5">星期五 Friday</option>
+                            <option value="6">星期六 Saturday</option>
+                            <option value="0">星期日及公眾假期 Sunday & Public Holidays</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control">
+                    <label class="label" for="hour"></label>
+                    <div class="select">
+                        <select name="hour" id="hour" onchange="reload();">
+                            <option value="00">00:00</option>
+                            <option value="01">01:00</option>
+                            <option value="02">02:00</option>
+                            <option value="03">03:00</option>
+                            <option value="04">04:00</option>
+                            <option value="05">05:00</option>
+                            <option value="06">06:00</option>
+                            <option value="07">07:00</option>
+                            <option value="08">08:00</option>
+                            <option value="09">09:00</option>
+                            <option value="10">10:00</option>
+                            <option value="11">11:00</option>
+                            <option value="12">12:00</option>
+                            <option value="13">13:00</option>
+                            <option value="14">14:00</option>
+                            <option value="15">15:00</option>
+                            <option value="16">16:00</option>
+                            <option value="17">17:00</option>
+                            <option value="18">18:00</option>
+                            <option value="19">19:00</option>
+                            <option value="20">20:00</option>
+                            <option value="21">21:00</option>
+                            <option value="22">22:00</option>
+                            <option value="23">23:00</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="maxInterchanges">最多轉車次數<br>Max Interchanges</label>
+                <div class="control">
+                    <input type="number" class="input" id="maxInterchanges" name="maxInterchanges" min="0" max="3" value="1" onchange="reload();">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="walkingSpeed">步行速度 (公里/小時)<br>Walking Speed (km/h)</label>
+                <div class="control">
+                    <input type="number" class="input" id="walkingSpeed" name="walkingSpeed" min="0.1" max="10" value="5.1" step="0.1" onchange="reload();">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="walkableDistance">最遠步行距離 (公里)<br>Walkable Distance (km)</label>
+                <div class="control">
+                    <input type="number" class="input" id="walkableDistance" name="walkableDistance" min="0" max="10" value="1.5" step="0.1" onchange="reload();">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="interchangeTimes">轉車所需時間 (秒)<br>Interchange Times (secs)</label>
+                <div class="control">
+                    <input type="number" class="input" id="interchangeTimes" name="interchangeTimes" min="0" max="3600" value="900" step="15" onchange="reload();">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="interchangeTimesForTrains">鐵路轉車所需時間 (秒)<br>Interchange Times for MTR (secs)</label>
+                <div class="control">
+                    <input type="number" class="input" id="interchangeTimesForTrains" name="interchangeTimesForTrains" min="0" max="3600" value="90" step="15" onchange="reload();">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="intensityByTravelTimeMaxTime">最低熱度行程時間 (分鐘)<br>Min Intensity Travel Time (mins)</label>
+                <div class="control">
+                    <label class="input is-unselectable slider-value" id="intensityByTravelTimeMaxTimeValue">90</label>
+                    <input type="range" class="slider" id="intensityByTravelTimeMaxTime" name="intensityByTravelTimeMaxTime" min="10" max="180" value="90" step="5" onchange="reload();" oninput="updateIntensitySliderValue(value);">
+                </div>
+                <div class="heat-legend">
+                    <canvas class="heat-legend-canvas" id="heat-legend" style="filter: opacity(0.75);"></canvas>
+                </div>
+                <div class="heat-legend-text">
+                    <span id="heat-legend-1">0</span><span id="heat-legend-2">45</span><span id="heat-legend-3">90</span><span id="heat-legend-4">135</span><span id="heat-legend-5">180</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="maxTransparency">熱圖透明度<br>Heatmap Transparency</label>
+                <div class="control">
+                    <label class="input is-unselectable slider-value" id="maxTransparencyValue">0.75</label>
+                    <input type="range" class="slider" id="maxTransparency" name="maxTransparency" min="0" max="1" value="0.75" step="0.05" onchange="reload();" oninput="updateMaxTransparencyValue(value);">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="boundaries">熱圖限於境內陸地<br>Clip Heatmap to Boundaries</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="language" id="boundaries" onchange="reload();">
+                            <option value="true">啟用 Enabled</option>
+                            <option value="false">停用 Disabled</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="map-container">
+            <div class="box info-box">
+                <span class="info-line">
+                    <b>所選地點 Selected Location</b><br>
+                    <label id="origin">點擊地圖選擇 Click Map</label><br>
+                </span>
+                <span class="info-line">
+                    <b>懸停位置 Hovering Location</b><br>
+                    <label id="hovering">-, -</label><br>
+                </span>
+                <span class="info-line">
+                    <b>懸停位置最快行程 Fastest Time</b><br>
+                    <label id="time">-</label> 分鐘 mins
+                </span>
+            </div>
+            <button class="options-button button" onclick="window.scrollTo(0, 0);">選項 Options</button>
+            <div id="map"></div>
+        </div>
+    </div>
+</body>
+</html>
