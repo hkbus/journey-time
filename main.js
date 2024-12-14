@@ -66,7 +66,6 @@ function reload() {
             intensityByTravelTimeMaxTime = Number(document.getElementById("intensityByTravelTimeMaxTime").value);
             maxTransparency = Number(document.getElementById("maxTransparency").value);
             clipToBoundaries = document.getElementById("boundaries").value === "true";
-            enableAreaLayer = document.getElementById("useArea").value === "true";
             updateHeatLegend(intensityByTravelTimeMaxTime);
             heatmapLayer.options.gradient = gradient;
             heatmapLayer._updateOptions();
@@ -382,7 +381,6 @@ async function updateOrigin(lat = lastPosition[0], lng = lastPosition[1]) {
     droppedPinLayer.clearLayers();
     transitPointLayer.clearLayers();
     areaLayer.clearLayers();
-    lastAreaGeoJson = null;
     L.marker([lat, lng]).addTo(droppedPinLayer);
     document.getElementById("origin").innerHTML = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
@@ -441,28 +439,6 @@ async function updateOrigin(lat = lastPosition[0], lng = lastPosition[1]) {
         marker.on('mouseout', () => {
             marker.closePopup();
         });
-    }
-
-    if (enableAreaLayer) {
-        const timeIntervals = [];
-        for (let min = 10; min <= intensityByTravelTimeMaxTime; min += 10) {
-            timeIntervals.push(min * 60);
-        }
-        const travelTimePolygons = generateTravelTimePolygon(timeIntervals);
-        for (const [time, polygon] of Object.entries(travelTimePolygons).toReversed()) {
-            const polygonLayer = L.geoJSON(polygon, {
-                style: {
-                    color: 'black',
-                    fillOpacity: 0,
-                    weight: 2
-                }
-            }).addTo(areaLayer);
-            polygonLayer.bindTooltip(`${time / 60} ${language === "en" ? " Mins Area" : "分鐘範圍"}`, {sticky: true});
-            polygonLayer.on('click', e => {
-                e.target.openTooltip(e.latlng); // Open the tooltip at the clicked location
-            });
-        }
-        lastAreaGeoJson = travelTimePolygons;
     }
 }
 
@@ -553,7 +529,6 @@ loadJSON("https://jt.hkbus.app/pdd.geojson", geoJson => {
 let lastPosition = null;
 let lastJourneyTimes = [];
 let lastJourneyTimesTree = null;
-let lastAreaGeoJson = null;
 
 let language = "zh";
 let basemapUrls = [
@@ -572,7 +547,6 @@ let interchangeTimes = 900;
 let interchangeTimeForTrains = 90;
 let walkableDistance = 1.5;
 let clipToBoundaries = false;
-let enableAreaLayer = false;
 let gradient = {
     0.1: "#0000FF",
     0.6: "#00FFFF",
