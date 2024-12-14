@@ -509,6 +509,56 @@ function getMinTimeAt(lat, lng) {
 
 // ==============================
 
+let currentRequestController = null;
+
+function updateLocationSearchSuggestions() {
+    const value = document.getElementById("locationSearch").value;
+    const datalist = document.getElementById("locationSearchSuggestions");
+
+    if (currentRequestController) {
+        currentRequestController.abort(); // Abort the ongoing request
+    }
+
+    if (value.length > 0) {
+        currentRequestController = new AbortController(); // Create a new AbortController
+        const { signal } = currentRequestController;
+
+        loadJSON(`https://geodata.gov.hk/gs/api/v1.0.0/locationSearch?q=${encodeURIComponent(value)}`, result => {
+            if (signal.aborted) {
+                return;
+            }
+            datalist.innerHTML = "";
+            result.slice(0, 50).forEach(({ nameZH, nameEN, addressZH, addressEN, x, y }) => {
+                const buttonElement = document.createElement("button");
+                buttonElement.classList.add("button", "is-small", "location-search-suggestion-button");
+                buttonElement.innerHTML = language === "en" ? `<p>${nameEN}<br><span class="location-search-suggestion-address">${addressEN}</span></p>` : `<p>${nameZH}<br><span class="location-search-suggestion-address">${addressZH}</span></p>`;
+                buttonElement.addEventListener("click", event => {
+                    loadJSON(`https://www.geodetic.gov.hk/transform/v2/?insys=hkgrid&outsys=wgsgeog&e=${x}&n=${y}`, ({ wgsLat: lat, wgsLong: lng }) => {
+                        document.getElementById("locationSearch").value = language === "en" ? nameEN : nameZH;
+                        datalist.innerHTML = "";
+                        setLoading(true);
+                        setTimeout(() => {
+                            try {
+                                lastPosition = [lat, lng];
+                                updateOrigin(lat, lng);
+                            } finally {
+                                setLoading(false);
+                            }
+                        }, 50);
+                    });
+                });
+                datalist.appendChild(buttonElement);
+            });
+            currentRequestController = null;
+        }, { signal });
+    } else {
+        datalist.innerHTML = "";
+        currentRequestController = null;
+    }
+}
+
+// ==============================
+
 let routeList = null;
 let stopList = null;
 let journeyTimes = null;

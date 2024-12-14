@@ -46,6 +46,14 @@
             </div>
 
             <div class="field">
+                <label class="label" for="locationSearch">地點搜尋<br>Location Search</label>
+                <div class="control">
+                    <input type="text" class="input" id="locationSearch" name="locationSearch" oninput="updateLocationSearchSuggestions();">
+                    <div class="location-search-suggestion-container" id="locationSearchSuggestions"></div>
+                </div>
+            </div>
+
+            <div class="field">
                 <label class="label">運輸方式過濾<br>Transportation Modes Filter</label>
                 <div class="control">
                     <table class="modes-table prevent-select">
