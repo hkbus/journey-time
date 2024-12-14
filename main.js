@@ -2,7 +2,6 @@ function loadJSON(url, callback) {
     fetch(url, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             'Accept-Encoding': 'gzip',
         },
     })
