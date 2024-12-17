@@ -57,6 +57,7 @@ jobs:
           filesaver.js \
           district_boundaries.geojson \
           pdd.geojson \
+          one_bite_logo.png \
           CNAME \
           build/
       - name: Update resources

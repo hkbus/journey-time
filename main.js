@@ -126,12 +126,19 @@ function updateHeatLegend(value) {
 
 function initMap() {
     tileLayers.clearLayers();
+    map.attributionControl.setPrefix(false);
     let first = true;
     for (const basemapUrl of basemapUrls) {
         if (first) {
             L.tileLayer(basemapUrl.replace("{lang}", language === "en" ? "en" : "tc"), {
                 maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer">HKSAR Gov</a>'
+                attribution: '' +
+                    '<span class="logo-box"><img src="./one_bite_logo.png" alt="One Bite Design Studio" style="height: 40px;"></span>' +
+                    '<span class="logo-box">Funded by <a href="https://www.onebitedesign.com">One Bite Design Studio</a></span>' +
+                    `${attributionPrefix} | ` +
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+                    '&copy; <a href="https://carto.com/attributions">CARTO</a> ' +
+                    '&copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer">HKSAR Gov</a>'
             }).addTo(tileLayers);
             first = false;
         } else {
@@ -622,6 +629,7 @@ const redIcon = L.icon({
 });
 
 const map = L.map('map').setView([22.362458, 114.115333], 11);
+const attributionPrefix = map.attributionControl.options.prefix;
 const tileLayers = L.layerGroup().addTo(map);
 initMap();
 
