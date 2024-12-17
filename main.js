@@ -131,7 +131,12 @@ function initMap() {
         if (first) {
             L.tileLayer(basemapUrl.replace("{lang}", language === "en" ? "en" : "tc"), {
                 maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer">HKSAR Gov</a>'
+                attribution: '' +
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+                    '&copy; <a href="https://carto.com/attributions">CARTO</a> ' +
+                    '&copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer">HKSAR Gov</a><br>' +
+                    '<span class="logo-box"><img src="./one_bite_logo.jpeg" alt="One Bite Design Studio" style="height: 40px;"></span>' +
+                    '<span class="logo-box">Funded by <a href="https://www.onebitedesign.com">One Bite Design Studio</a></span>'
             }).addTo(tileLayers);
             first = false;
         } else {

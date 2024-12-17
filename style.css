@@ -285,6 +285,12 @@ html {
     display: none !important;
 }
 
+.logo-box {
+    width: 100%;
+    display: block;
+    text-align: end;
+}
+
 @media screen and (max-width: 700px) {
     .sidebar {
         width: 100%;
