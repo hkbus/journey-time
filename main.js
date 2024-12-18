@@ -134,11 +134,11 @@ function initMap() {
                 maxZoom: 19,
                 attribution: '' +
                     '<span class="logo-box"><img src="./one_bite_logo.png" alt="One Bite Design Studio" style="height: 40px;"></span>' +
-                    '<span class="logo-box">Funded by <a href="https://www.onebitedesign.com">One Bite Design Studio</a></span>' +
+                    '<span class="logo-box">Funded by <a href="https://www.onebitedesign.com" target="_blank">One Bite Design Studio</a></span>' +
                     `${attributionPrefix} | ` +
-                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
-                    '&copy; <a href="https://carto.com/attributions">CARTO</a> ' +
-                    '&copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer">HKSAR Gov</a>'
+                    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> ' +
+                    '&copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a> ' +
+                    '&copy; <a href="https://api.portal.hkmapservice.gov.hk/disclaimer" target="_blank">HKSAR Gov</a>'
             }).addTo(tileLayers);
             first = false;
         } else {

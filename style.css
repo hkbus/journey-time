@@ -291,6 +291,10 @@ html {
     text-align: end;
 }
 
+.leaflet-control-attribution {
+    background-color: unset !important;
+}
+
 @media screen and (max-width: 700px) {
     .sidebar {
         width: 100%;
