@@ -59,6 +59,7 @@ jobs:
           pdd.geojson \
           one_bite_logo.png \
           CNAME \
+          jt-share.png \
           build/
       - name: Update resources
         uses: JamesIves/github-pages-deploy-action@v4
